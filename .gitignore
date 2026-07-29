@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environnements virtuels
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+
+# Cache
+cache/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Excel temporaires
+~$*.xlsx
