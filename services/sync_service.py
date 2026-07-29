@@ -1,6 +1,9 @@
+import logging
+
 from repositories.excel_repository import ExcelRepository
 from services.scryfall_service import ScryfallService
 
+logger = logging.getLogger(__name__)
 
 class SyncService:
 
@@ -8,31 +11,34 @@ class SyncService:
     Synchronise Base_Reference.xlsx avec Scryfall.
     """
 
-    def __init__(self):
+
+    def __init__(self) -> None:
 
         self.repository = ExcelRepository()
 
         self.scryfall = ScryfallService()
 
-    def run(self):
+    def run(self) -> None:
 
         cards = self.repository.find_all()
 
-        total = self.repository.count()
+        total = len(cards)
 
         success = 0
 
         failed = 0
 
-        print()
-        print("===== Synchronisation Scryfall =====")
-        print()
+        logger.info("-" * 60)
+        logger.info("===== Synchronisation Scryfall =====")
+        logger.info("-" * 60)
 
         for index, card in enumerate(cards, start=1):
 
-            print(
-                f"[{index}/{total}] "
-                f"{card.name_en}"
+            logger.info(
+                "[%s/%s] %s",
+                index,
+                total,
+                card.name_en
             )
 
             translation = self.scryfall.get_translation(
@@ -56,18 +62,19 @@ class SyncService:
 
                 failed += 1
 
-        print()
+        logger.info("-" * 60)
 
-        print("Sauvegarde du fichier Excel...")
+        logger.info("Sauvegarde du fichier Excel...")
 
-        self.repository.save()
+        try:
+            self.repository.save()
+        finally:
+            self.repository.close()
 
-        self.repository.close()
+        logger.info("-" * 60)
 
-        print()
+        logger.info("===== Synchronisation terminée =====")
 
-        print("===== Synchronisation terminée =====")
-
-        print(f"Cartes mises à jour : {success}")
-
-        print(f"Cartes introuvables : {failed}")
+        logger.info("Cartes mises à jour : %s", success)
+        
+        logger.info("Cartes introuvables : %s", failed)

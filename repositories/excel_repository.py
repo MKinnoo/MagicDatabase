@@ -1,8 +1,8 @@
+from typing import Any
+
 from openpyxl import load_workbook
 
-from config import BASE_REFERENCE
-from config import SHEET_NAME
-
+from config import BASE_REFERENCE, SHEET_NAME
 from models.card import Card
 from models.translation import Translation
 
@@ -13,7 +13,7 @@ class ExcelRepository:
     Repository chargé de manipuler Base_Reference.xlsx.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.workbook = load_workbook(BASE_REFERENCE)
 
@@ -21,22 +21,27 @@ class ExcelRepository:
 
         self.headers = self.__load_headers()
 
-    def __load_headers(self):
+    def __load_headers(self) -> dict[str, int]:
 
-        headers = {}
+        headers: dict[str, int] = {}
 
         for cell in self.sheet[1]:
             headers[cell.value] = cell.column
 
         return headers
     
-    def __get(self, row, column_name):
+    def __get(self, row: int, column_name: str) -> Any:
 
         column = self.headers[column_name]
 
         return self.sheet.cell(row=row, column=column).value
 
-    def __set(self, row, column_name, value):
+    def __set(
+        self,
+        row: int,
+        column_name: str,
+        value: Any
+    ) -> None:
 
         column = self.headers[column_name]
 
@@ -45,9 +50,16 @@ class ExcelRepository:
             column=column
         ).value = value
 
-    def find_all(self):
+    def find_all(self) -> list[Card]:
 
-        cards = []
+        """
+        Charge toutes les cartes présentes dans le fichier Excel.
+
+        Returns:
+            La liste des cartes trouvées dans la feuille de calcul.
+        """
+
+        cards: list[Card] = []
 
         for row in range(2, self.sheet.max_row + 1):
 
@@ -85,7 +97,7 @@ class ExcelRepository:
 
         translation: Translation
 
-    ):
+    ) -> None:
 
         if translation.name:
 
@@ -103,15 +115,15 @@ class ExcelRepository:
                 translation.oracle_text
             )
 
-    def save(self):
+    def save(self) -> None:
 
         self.workbook.save(BASE_REFERENCE)
 
-    def close(self):
+    def close(self) -> None:
 
         self.workbook.close()
 
-    def __normalize_collector_number(self, value) -> str:
+    def __normalize_collector_number(self, value: Any) -> str:
         """
         Normalise un numéro de collection provenant d'Excel.
 
@@ -143,6 +155,3 @@ class ExcelRepository:
 
         # Chaîne de caractères ou autre
         return str(value).strip()
-
-    def count(self) -> int:
-        return self.sheet.max_row - 1
