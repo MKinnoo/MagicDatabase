@@ -1,5 +1,7 @@
 import logging
 
+from config import CACHE_PATH
+from repositories.cache_repository import CacheRepository
 from repositories.excel_repository import ExcelRepository
 from services.scryfall_service import ScryfallService
 
@@ -14,13 +16,13 @@ class SyncService:
 
     def __init__(self) -> None:
 
-        self.repository = ExcelRepository()
-
-        self.scryfall = ScryfallService()
+        self.excel_repository = ExcelRepository()
+        self.cache_repository = CacheRepository(CACHE_PATH)
+        self.scryfall = ScryfallService(self.cache_repository)
 
     def run(self) -> None:
 
-        cards = self.repository.find_all()
+        cards = self.excel_repository.find_all()
 
         total = len(cards)
 
@@ -51,7 +53,7 @@ class SyncService:
 
             if translation.found:
 
-                self.repository.update_translation(
+                self.excel_repository.update_translation(
                     card,
                     translation
                 )
@@ -67,9 +69,9 @@ class SyncService:
         logger.info("Sauvegarde du fichier Excel...")
 
         try:
-            self.repository.save()
+            self.excel_repository.save()
         finally:
-            self.repository.close()
+            self.excel_repository.close()
 
         logger.info("-" * 60)
 

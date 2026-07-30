@@ -8,8 +8,15 @@ from config import (
     DEFAULT_LANGUAGE,
     SCRYFALL_API_URL,
     USER_AGENT,
+    CACHE_EXPIRATION_DAYS,
 )
+from datetime import (
+    datetime,
+    timedelta,
+)
+from models.cache_entry import CacheEntry
 from models.translation import Translation
+from repositories.cache_repository import CacheRepository
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +32,9 @@ class ScryfallService:
     """
     Service chargé des appels à l'API Scryfall.
     """
+
+    def __init__(self, cache_repository: CacheRepository):
+        self._cache_repository = cache_repository
 
     def get_translation(
         self,
@@ -45,8 +55,31 @@ class ScryfallService:
             found est positionné à False.
         """
 
+        normalized_set_code = (set_code or "").lower()
+
+        cache_key = f"{normalized_set_code}:{collector_number}"
+
+        cache_entry = self._cache_repository.get(cache_key)
+
+        if (
+            cache_entry is not None
+            and not self._is_cache_expired(cache_entry)
+        ):
+
+            logger.debug(
+                "Cache hit pour %s",
+                cache_key
+            )
+
+            return cache_entry.translation
+
+        logger.debug(
+            "Cache miss pour %s",
+            cache_key
+        )
+
         url = SCRYFALL_API_URL.format(
-            set=(set_code or "").lower(),
+            set=normalized_set_code,
             collector=collector_number,
             language=DEFAULT_LANGUAGE
         )
@@ -65,22 +98,24 @@ class ScryfallService:
 
             data = response.json()
 
-            return Translation(
-
+            translation = Translation(
                 language=DEFAULT_LANGUAGE,
-
-                name=data.get(
-                    "printed_name",
-                    ""
-                ),
-
-                oracle_text=data.get(
-                    "printed_text",
-                    ""
-                ),
-
+                name=data.get("printed_name", ""),
+                oracle_text=data.get("printed_text", ""),
                 found=True
             )
+
+            cache_entry = CacheEntry(
+                translation=translation,
+                updated_at=datetime.now()
+            )
+
+            self._cache_repository.put(
+                cache_key,
+                cache_entry
+            )
+
+            return translation
 
         except requests.RequestException as e:
 
@@ -96,3 +131,15 @@ class ScryfallService:
                 oracle_text="",
                 found=False
             )
+
+    def _is_cache_expired(
+        self,
+        cache_entry: CacheEntry
+    ) -> bool:
+        """
+        Indique si une entrée du cache est expirée.
+        """
+        return (
+            datetime.now() - cache_entry.updated_at
+            > timedelta(days=CACHE_EXPIRATION_DAYS)
+        )

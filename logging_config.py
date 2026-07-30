@@ -7,7 +7,7 @@ def configure_logging() -> None:
     Configure le système de journalisation de l'application.
     """
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         force=True,
     )
