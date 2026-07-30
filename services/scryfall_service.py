@@ -30,11 +30,59 @@ HEADERS: dict[str, str] = {
 class ScryfallService:
 
     """
-    Service chargé des appels à l'API Scryfall.
+    Extrait la traduction d'une carte Scryfall.
+
+    Gère les cartes simples ainsi que les cartes comportant plusieurs faces.
     """
 
     def __init__(self, cache_repository: CacheRepository):
         self._cache_repository = cache_repository
+
+    def _extract_translation(
+        self,
+        card_data: dict
+    ) -> Translation:
+        """
+        Extrait la traduction des cartes simples et recto-verso.
+        """
+        printed_name = card_data.get("printed_name")
+        if printed_name:
+            return Translation(
+                language=DEFAULT_LANGUAGE,
+                name=printed_name,
+                oracle_text=card_data.get("printed_text", ""),
+                found=True
+            )
+
+        faces = card_data.get("card_faces")
+        card_names: list[str] = []
+        card_oracle_parts: list[str] = []
+
+        if faces:
+            for face in faces:
+                face_name = face.get("printed_name", "")
+                face_text = face.get("printed_text", "")
+                card_names.append(face_name)
+                card_oracle_parts.append(
+                    f"--- {face_name} ---\n\n"
+                    f"{face_text}"
+                )
+            
+            card_name = " // ".join(card_names)
+            card_oracle = "\n\n".join(card_oracle_parts)
+            return Translation(
+                language=DEFAULT_LANGUAGE,
+                name=card_name,
+                oracle_text=card_oracle,
+                found=True
+            )
+
+        return Translation(
+            language=DEFAULT_LANGUAGE,
+            name="",
+            oracle_text="",
+            found=True
+        )
 
     def get_translation(
         self,
@@ -98,12 +146,7 @@ class ScryfallService:
 
             data = response.json()
 
-            translation = Translation(
-                language=DEFAULT_LANGUAGE,
-                name=data.get("printed_name", ""),
-                oracle_text=data.get("printed_text", ""),
-                found=True
-            )
+            translation = self._extract_translation(data)
 
             cache_entry = CacheEntry(
                 translation=translation,

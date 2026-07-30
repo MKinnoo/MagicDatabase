@@ -24,6 +24,11 @@ Le projet a pour objectif de proposer une architecture claire, évolutive et fac
 * Amélioration de la gestion des erreurs
 * Publication sur GitHub
 
+## Version 1.2
+
+* Ajout d'un système de cache local des données Scryfall afin d'améliorer les performances et de limiter les appels à l'API.
+* Ajout du support des cartes multifaces (nom et texte Oracle).
+
 ---
 
 # Architecture du projet
@@ -167,19 +172,19 @@ pip install -r requirements.txt
 
 * Synchronisation des traductions françaises
 
-## V1.1 🚧
+## V1.1 ✅
 
 * Documentation
 * Logging
 * Typage
 * Revue de code
 
-## V1.2
+## V1.2 ✅
 
 * Cache local des réponses Scryfall
 * Amélioration des performances
 
-## V2.0
+## V2.0 🚧
 
 * Import automatique d'une extension complète
 
