@@ -167,19 +167,19 @@ pip install -r requirements.txt
 
 * Synchronisation des traductions françaises
 
-## V1.1 🚧
+## V1.1 ✅
 
 * Documentation
 * Logging
 * Typage
 * Revue de code
 
-## V1.2
+## V1.2 ✅
 
 * Cache local des réponses Scryfall
 * Amélioration des performances
 
-## V2.0
+## V2.0 🚧
 
 * Import automatique d'une extension complète
 
